@@ -1,0 +1,21 @@
+{
+  "version": "2.0",
+  "app_name": "pollyapp",
+  "manage_iam_role":false,
+  "iam_role_arn":"",
+  "stages": {
+    "dev": {
+      "api_gateway_stage": "api",
+      "lambda_functions":{
+        "convert_to_audio":{
+          "lambda_timeout":300
+        }
+      },
+      "environment_variables":{
+        "DB_TABLE_NAME":"",
+        "SNS_TOPIC":"",
+        "BUCKET_NAME":""
+      }
+    }
+  }
+}

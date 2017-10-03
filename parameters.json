@@ -1,0 +1,14 @@
+[
+    {
+        "ParameterKey":"AudioBucketName",
+        "ParameterValue":""
+    },
+    {
+        "ParameterKey":"WebsiteBucketName",
+        "ParameterValue":""
+    },
+    {
+        "ParameterKey":"TableName",
+        "ParameterValue":""
+    }
+]

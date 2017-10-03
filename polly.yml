@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description:
+  This script create the esssential AWS resources for the Polly app
+Parameters:
+  AudioBucketName:
+    Type: String
+    Description: Name of the bucket where storing the generated audio files
+  WebsiteBucketName:
+    Type: String
+    Description: Name of the bucket where storing the website assets
+  TableName:
+    Type: String
+    Description: DynamoDb table name
+Resources:
+  PollyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        -
+          PolicyName: polly_policy_role
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - "polly:SynthesizeSpeech"
+                  - "dynamodb:Query"
+                  - "dynamodb:Scan"
+                  - "dynamodb:PutItem"
+                  - "dynamodb:UpdateItem"
+                  - "sns:Publish"
+                  - "s3:PutObject"
+                  - "s3:PutObjectAcl"
+                  - "s3:GetBucketLocation"
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "*"
+  AudioBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      BucketName: !Ref AudioBucketName
+  AudioBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AudioBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Sid: "PublicReadGetObject"
+            Effect: Allow
+            Principal: "*"
+            Action:
+              - "s3:GetObject"
+            Resource: !Sub ${AudioBucket.Arn}/*
+  PollyBucketWebsite:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      BucketName: !Ref WebsiteBucketName
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+  PollySNS:
+    Type: AWS::SNS::Topic
+  PostTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref TableName
+      AttributeDefinitions:
+        -
+          AttributeName: "id"
+          AttributeType: "S"
+      KeySchema:
+        -
+          AttributeName: "id"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        WriteCapacityUnits: "5"
+        ReadCapacityUnits: "5"
+Outputs:
+  PollyTopicArn:
+    Value: !Ref PollySNS
+    Description: ARN of SNS Topic
+  WebsiteURL:
+    Value: !GetAtt PollyBucketWebsite.WebsiteURL
+    Description: URL for website hosted on S3
+  RoleArn:
+    Value: !GetAtt PollyRole.Arn
+    Description: Role ARN for chalice
+  
